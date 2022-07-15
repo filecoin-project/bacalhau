@@ -57,7 +57,7 @@ func TestSimilarMoviesStdout(t *testing.T) {
 		outputDir, err := ioutil.TempDir("", "bacalhau-ipfs-devstack-test")
 		require.NoError(t, err)
 		cid := state.ResultsID
-		err = node.IpfsClient.Get(ctx, cid outputDir)
+		err = node.IpfsClient.Get(ctx, cid ,outputDir)
 		require.NoError(t, err)
 
 		bytesDowloaded, err := ioutil.ReadFile(outputDir + "/" + cid + "/stdout")
