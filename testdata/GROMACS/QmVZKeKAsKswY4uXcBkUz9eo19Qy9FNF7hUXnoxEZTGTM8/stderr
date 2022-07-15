@@ -1,0 +1,49 @@
+                     :-) GROMACS - gmx pdb2gmx, 2022.2 (-:
+
+Executable:   /gromacs/bin.AVX2_256/gmx_mpi
+Data prefix:  /gromacs
+Working dir:  /
+Command line:
+  gmx_mpi pdb2gmx -f input/1AKI.pdb -o output/1AKI_processed.gro -water spc
+
+Opening force field file /gromacs/share/gromacs/top/oplsaa.ff/aminoacids.r2b
+WARNING: all CONECT records are ignored
+there were 0 atoms with zero occupancy and 74 atoms with          occupancy unequal to one (out of 1079 atoms). Check your pdb file.
+Opening force field file /gromacs/share/gromacs/top/oplsaa.ff/atomtypes.atp
+Opening force field file /gromacs/share/gromacs/top/oplsaa.ff/aminoacids.rtp
+Opening force field file /gromacs/share/gromacs/top/oplsaa.ff/aminoacids.hdb
+Opening force field file /gromacs/share/gromacs/top/oplsaa.ff/aminoacids.n.tdb
+Opening force field file /gromacs/share/gromacs/top/oplsaa.ff/aminoacids.c.tdb
+Analysing hydrogen-bonding network for automated assignment of histidine
+ protonation. 213 donors and 184 acceptors were found.
+There are 255 hydrogen bonds
+Will use HISE for residue 15
+8 out of 8 lines of specbond.dat converted successfully
+Special Atom Distance matrix:
+                    CYS6   MET12   HIS15   CYS30   CYS64   CYS76   CYS80
+                    SG48    SD87  NE2118   SG238   SG513   SG601   SG630
+   MET12    SD87   1.166
+   HIS15  NE2118   1.776   1.019
+   CYS30   SG238   1.406   1.054   2.069
+   CYS64   SG513   2.835   1.794   1.789   2.241
+   CYS76   SG601   2.704   1.551   1.468   2.116   0.765
+   CYS80   SG630   2.959   1.951   1.916   2.391   0.199   0.944
+   CYS94   SG724   2.550   1.407   1.382   1.975   0.665   0.202   0.855
+  MET105   SD799   1.827   0.911   1.683   0.888   1.849   1.461   2.036
+  CYS115   SG889   1.576   1.084   2.078   0.200   2.111   1.989   2.262
+  CYS127   SG981   0.197   1.072   1.721   1.313   2.799   2.622   2.934
+                   CYS94  MET105  CYS115
+                   SG724   SD799   SG889
+  MET105   SD799   1.381
+  CYS115   SG889   1.853   0.790
+  CYS127   SG981   2.475   1.686   1.483
+Linking CYS-6 SG-48 and CYS-127 SG-981...
+Linking CYS-30 SG-238 and CYS-115 SG-889...
+Linking CYS-64 SG-513 and CYS-80 SG-630...
+Linking CYS-76 SG-601 and CYS-94 SG-724...
+Before cleaning: 5142 pairs
+Before cleaning: 5187 dihedrals
+8 out of 8 lines of specbond.dat converted successfully
+
+GROMACS reminds you: "They don't have half hours in the north" (Carl Caleman)
+
