@@ -15,7 +15,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func TestSimilarMoviesStdout(node *ComputeNode, t *testing.T) {
+func TestSimilarMoviesStdout(t *testing.T) {
 	ctx, span := newSpan("TestSimilarMoviesStdout")
 	defer span.End()
 	stack, cm := SetupTest(t, 1, 0, computenode.NewDefaultComputeNodeConfig())
@@ -59,6 +59,14 @@ func TestSimilarMoviesStdout(node *ComputeNode, t *testing.T) {
 		outputDir, err := ioutil.TempDir("", "bacalhau-ipfs-devstack-test")
 		require.NoError(t, err)
 		cid := state.ResultsID
+		for i, node := range stack.Nodes {
+			if node == nil {
+				continue
+			}
+			if i >= nodeCount {
+				continue
+			}
+		}
 		err = node.IpfsClient.Get(ctx, cid, outputDir)
 		require.NoError(t, err)
 
@@ -76,7 +84,7 @@ func TestSimilarMoviesStdout(node *ComputeNode, t *testing.T) {
 	}
 }
 
-func TestSyntheticDataGenerationOutputVolume(node *ComputeNode, t *testing.T) {
+func TestSyntheticDataGenerationOutputVolume(t *testing.T) {
 	ctx, span := newSpan("TestSyntheticDataGenerationOutputVolume")
 	defer span.End()
 	stack, cm := SetupTest(t, 1, 0, computenode.NewDefaultComputeNodeConfig())
@@ -121,6 +129,14 @@ func TestSyntheticDataGenerationOutputVolume(node *ComputeNode, t *testing.T) {
 		outputDir, err := ioutil.TempDir("", "bacalhau-ipfs-devstack-test")
 		require.NoError(t, err)
 		cid := state.ResultsID
+		for i, node := range stack.Nodes {
+			if node == nil {
+				continue
+			}
+			if i >= nodeCount {
+				continue
+			}
+		}
 		err = node.IpfsClient.Get(ctx, cid, outputDir)
 		require.NoError(t, err)
 
@@ -208,7 +224,7 @@ func TestCoresetInputVolumeStdout(t *testing.T) {
 
 }
 
-func TestGROMACSInputVolumeOutputVolume(node *ComputeNode, t *testing.T) {
+func TestGROMACSInputVolumeOutputVolume(t *testing.T) {
 	ctx, span := newSpan("TestGMORACSInputVolumeOutputVolume")
 	defer span.End()
 	stack, cm := SetupTest(t, 1, 0, computenode.NewDefaultComputeNodeConfig())
@@ -261,6 +277,14 @@ func TestGROMACSInputVolumeOutputVolume(node *ComputeNode, t *testing.T) {
 		outputDir, err := ioutil.TempDir("", "bacalhau-ipfs-devstack-test")
 		require.NoError(t, err)
 		cid := state.ResultsID
+		for i, node := range stack.Nodes {
+			if node == nil {
+				continue
+			}
+			if i >= nodeCount {
+				continue
+			}
+		}
 		err = node.IpfsClient.Get(ctx, cid, outputDir)
 		require.NoError(t, err)
 
