@@ -58,20 +58,15 @@ func TestSimilarMoviesStdout(t *testing.T) {
 	require.NoError(t, err)
 
 	for nodeID, state := range loadedJob.State {
+		node, err := stack.GetNode(ctx, nodeID)
+		require.NoError(t, err)
 
 		outputDir, err := ioutil.TempDir("", "bacalhau-ipfs-devstack-test")
 		require.NoError(t, err)
 		cid := state.ResultsID
-		for i, node := range stack.Nodes {
-			if node == nil {
-				continue
-			}
-			if i >= nodeCount {
-				continue
-			}
-			err = node.IpfsClient.Get(ctx, cid, outputDir)
-			require.NoError(t, err)
-		}
+
+		err = node.IpfsClient.Get(ctx, cid, outputDir)
+		require.NoError(t, err)
 
 		bytesDowloaded, err := ioutil.ReadFile(outputDir + "/" + cid + "/stdout")
 		require.NoError(err)
@@ -131,19 +126,15 @@ func TestSyntheticDataGenerationOutputVolume(t *testing.T) {
 
 	for nodeID, state := range loadedJob.State {
 
+		node, err := stack.GetNode(ctx, nodeID)
+		require.NoError(t, err)
+
 		outputDir, err := ioutil.TempDir("", "bacalhau-ipfs-devstack-test")
 		require.NoError(t, err)
 		cid := state.ResultsID
-		for i, node := range stack.Nodes {
-			if node == nil {
-				continue
-			}
-			if i >= nodeCount {
-				continue
-			}
-			err = node.IpfsClient.Get(ctx, cid, outputDir)
-			require.NoError(t, err)
-		}
+
+		err = node.IpfsClient.Get(ctx, cid, outputDir)
+		require.NoError(t, err)
 
 		bytesDowloaded, err := ioutil.ReadFile(outputDir + "/" + cid + "/stdout")
 		require.NoError(err)
@@ -283,19 +274,15 @@ func TestGROMACSInputVolumeOutputVolume(t *testing.T) {
 
 	for nodeID, state := range loadedJob.State {
 
+		node, err := stack.GetNode(ctx, nodeID)
+		require.NoError(t, err)
+
 		outputDir, err := ioutil.TempDir("", "bacalhau-ipfs-devstack-test")
 		require.NoError(t, err)
 		cid := state.ResultsID
-		for i, node := range stack.Nodes {
-			if node == nil {
-				continue
-			}
-			if i >= nodeCount {
-				continue
-			}
-			err = node.IpfsClient.Get(ctx, cid, outputDir)
-			require.NoError(t, err)
-		}
+
+		err = node.IpfsClient.Get(ctx, cid, outputDir)
+		require.NoError(t, err)
 
 		bytesDowloaded, err := ioutil.ReadFile(outputDir + "/" + cid + "/output" + "/1AKI_processed.gro")
 		require.NoError(err)
