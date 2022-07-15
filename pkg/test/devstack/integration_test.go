@@ -2,6 +2,7 @@ package devstack
 
 import (
 	"fmt"
+	"io/ioutil"
 	"strings"
 	"testing"
 
@@ -14,7 +15,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func TestSimilarMoviesStdout(t *testing.T) {
+func TestSimilarMoviesStdout(node *ComputeNode, t *testing.T) {
 	ctx, span := newSpan("TestSimilarMoviesStdout")
 	defer span.End()
 	stack, cm := SetupTest(t, 1, 0, computenode.NewDefaultComputeNodeConfig())
@@ -48,6 +49,7 @@ func TestSimilarMoviesStdout(t *testing.T) {
 	)
 	require.NoError(t, err)
 
+	apiClient := publicapi.NewAPIClient(stack.Nodes[0].APIServer.GetURI())
 	loadedJob, ok, err := apiClient.Get(ctx, jobId)
 	require.True(t, ok)
 	require.NoError(t, err)
@@ -57,7 +59,7 @@ func TestSimilarMoviesStdout(t *testing.T) {
 		outputDir, err := ioutil.TempDir("", "bacalhau-ipfs-devstack-test")
 		require.NoError(t, err)
 		cid := state.ResultsID
-		err = node.IpfsClient.Get(ctx, cid ,outputDir)
+		err = node.IpfsClient.Get(ctx, cid, outputDir)
 		require.NoError(t, err)
 
 		bytesDowloaded, err := ioutil.ReadFile(outputDir + "/" + cid + "/stdout")
@@ -69,12 +71,12 @@ func TestSimilarMoviesStdout(t *testing.T) {
 		require.NoError(err)
 
 		// compare the local file stored here
-		log.Info().Msg(string(bytes))
+		log.Info().Msg(string(bytesDowloaded))
 		require.Equal(t, bytesDowloaded, bytesLocal)
 	}
 }
 
-func TestSyntheticDataGenerationOutputVolume(t *testing.T) {
+func TestSyntheticDataGenerationOutputVolume(node *ComputeNode, t *testing.T) {
 	ctx, span := newSpan("TestSyntheticDataGenerationOutputVolume")
 	defer span.End()
 	stack, cm := SetupTest(t, 1, 0, computenode.NewDefaultComputeNodeConfig())
@@ -109,6 +111,7 @@ func TestSyntheticDataGenerationOutputVolume(t *testing.T) {
 	)
 	require.NoError(t, err)
 
+	apiClient := publicapi.NewAPIClient(stack.Nodes[0].APIServer.GetURI())
 	loadedJob, ok, err := apiClient.Get(ctx, jobId)
 	require.True(t, ok)
 	require.NoError(t, err)
@@ -130,7 +133,7 @@ func TestSyntheticDataGenerationOutputVolume(t *testing.T) {
 		require.NoError(err)
 
 		// compare the local file stored here
-		log.Info().Msg(string(bytes))
+		log.Info().Msg(string(bytesDowloaded))
 		require.Equal(t, bytesDowloaded, bytesLocal)
 	}
 
@@ -150,13 +153,12 @@ func TestCoresetInputVolumeStdout(t *testing.T) {
 	fileCid, err := stack.AddFileToNodes(nodeCount, filePath)
 	require.NoError(t, err)
 
-
 	_, out, err := cmd.ExecuteTestCobraCommand(t, cmd.RootCmd,
 		fmt.Sprintf("--api-port=%d", stack.Nodes[0].APIServer.Port),
 		"--api-host=localhost",
 		"docker",
 		"run",
-		fmt.Sprintf("-v %s:/input",fileCid),
+		fmt.Sprintf("-v %s:/input", fileCid),
 		"jsace/coreset",
 		"--",
 		"/bin/bash",
@@ -177,8 +179,8 @@ func TestCoresetInputVolumeStdout(t *testing.T) {
 	)
 	require.NoError(t, err)
 
-
 	// since it's non deterministic rewrite it in WASM
+	// 	apiClient := publicapi.NewAPIClient(stack.Nodes[0].APIServer.GetURI())
 	// loadedJob, ok, err := apiClient.Get(ctx, jobId)
 	// require.True(t, ok)
 	// require.NoError(t, err)
@@ -200,13 +202,13 @@ func TestCoresetInputVolumeStdout(t *testing.T) {
 	// 	require.NoError(err)
 
 	// 	// compare the local file stored here
-	// 	log.Info().Msg(string(bytes))
+	// 	log.Info().Msg(string(bytesDowloaded))
 	// 	require.Equal(t, bytesDowloaded, bytesLocal)
 	// }
 
 }
 
-func TestGROMACSInputVolumeOutputVolume(t *testing.T) {
+func TestGROMACSInputVolumeOutputVolume(node *ComputeNode, t *testing.T) {
 	ctx, span := newSpan("TestGMORACSInputVolumeOutputVolume")
 	defer span.End()
 	stack, cm := SetupTest(t, 1, 0, computenode.NewDefaultComputeNodeConfig())
@@ -220,13 +222,12 @@ func TestGROMACSInputVolumeOutputVolume(t *testing.T) {
 	fileCid, err := stack.AddFileToNodes(nodeCount, filePath)
 	require.NoError(t, err)
 
-
 	_, out, err := cmd.ExecuteTestCobraCommand(t, cmd.RootCmd,
 		fmt.Sprintf("--api-port=%d", stack.Nodes[0].APIServer.Port),
 		"--api-host=localhost",
 		"docker",
 		"run",
-		fmt.Sprintf("-v %s:/input",fileCid),
+		fmt.Sprintf("-v %s:/input", fileCid),
 		"-o output:/output",
 		"gromacs/gromacs",
 		"--",
@@ -250,6 +251,7 @@ func TestGROMACSInputVolumeOutputVolume(t *testing.T) {
 
 	// load result from ipfs and check it
 
+	apiClient := publicapi.NewAPIClient(stack.Nodes[0].APIServer.GetURI())
 	loadedJob, ok, err := apiClient.Get(ctx, jobId)
 	require.True(t, ok)
 	require.NoError(t, err)
@@ -262,17 +264,17 @@ func TestGROMACSInputVolumeOutputVolume(t *testing.T) {
 		err = node.IpfsClient.Get(ctx, cid, outputDir)
 		require.NoError(t, err)
 
-		bytesDowloaded, err := ioutil.ReadFile(outputDir + "/" + cid + "/output"+"/1AKI_processed.gro")
+		bytesDowloaded, err := ioutil.ReadFile(outputDir + "/" + cid + "/output" + "/1AKI_processed.gro")
 		require.NoError(err)
 
 		// read local files
 		path_local := "../../testdata/synthetic-data-generation"
-		bytesLocal, err := ioutil.ReadFile(path_local + "/" + "QmVZKeKAsKswY4uXcBkUz9eo19Qy9FNF7hUXnoxEZTGTM8" + "/output"+"/1AKI_processed.gro")
+		bytesLocal, err := ioutil.ReadFile(path_local + "/" + "QmVZKeKAsKswY4uXcBkUz9eo19Qy9FNF7hUXnoxEZTGTM8" + "/output" + "/1AKI_processed.gro")
 		require.NoError(err)
 
 		// compare the local file stored here
-		log.Info().Msg(string(bytes))
+		log.Info().Msg(string(bytesDowloaded))
 		require.Equal(t, bytesDowloaded, bytesLocal)
-	}	
+	}
 
 }
