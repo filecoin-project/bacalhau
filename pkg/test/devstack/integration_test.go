@@ -17,7 +17,6 @@ import (
 )
 
 func TestSimilarMoviesStdout(t *testing.T) {
-	nodeCount := 3
 
 	ctx, span := newSpan("TestSimilarMoviesStdout")
 	defer span.End()
@@ -83,7 +82,6 @@ func TestSimilarMoviesStdout(t *testing.T) {
 }
 
 func TestSyntheticDataGenerationOutputVolume(t *testing.T) {
-	nodeCount := 3
 
 	ctx, span := newSpan("TestSyntheticDataGenerationOutputVolume")
 	defer span.End()
