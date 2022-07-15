@@ -16,7 +16,9 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func TestSimilarMoviesStdout(nodeCount int, t *testing.T) {
+func TestSimilarMoviesStdout(t *testing.T) {
+	nodeCount := 3
+
 	ctx, span := newSpan("TestSimilarMoviesStdout")
 	defer span.End()
 	stack, cm := SetupTest(t, 1, 0, computenode.NewDefaultComputeNodeConfig())
@@ -85,7 +87,9 @@ func TestSimilarMoviesStdout(nodeCount int, t *testing.T) {
 	}
 }
 
-func TestSyntheticDataGenerationOutputVolume(nodeCount int, t *testing.T) {
+func TestSyntheticDataGenerationOutputVolume(t *testing.T) {
+	nodeCount := 3
+
 	ctx, span := newSpan("TestSyntheticDataGenerationOutputVolume")
 	defer span.End()
 	stack, cm := SetupTest(t, 1, 0, computenode.NewDefaultComputeNodeConfig())
@@ -156,7 +160,9 @@ func TestSyntheticDataGenerationOutputVolume(nodeCount int, t *testing.T) {
 
 }
 
-func TestCoresetInputVolumeStdout(nodeCount int, t *testing.T) {
+func TestCoresetInputVolumeStdout(t *testing.T) {
+	nodeCount := 3
+
 	ctx, span := newSpan("TestCoresetInputVolumeStdout")
 	defer span.End()
 	stack, cm := SetupTest(t, 1, 0, computenode.NewDefaultComputeNodeConfig())
@@ -225,7 +231,9 @@ func TestCoresetInputVolumeStdout(nodeCount int, t *testing.T) {
 
 }
 
-func TestGROMACSInputVolumeOutputVolume(nodeCount int, t *testing.T) {
+func TestGROMACSInputVolumeOutputVolume(t *testing.T) {
+	nodeCount := 3
+
 	ctx, span := newSpan("TestGMORACSInputVolumeOutputVolume")
 	defer span.End()
 	stack, cm := SetupTest(t, 1, 0, computenode.NewDefaultComputeNodeConfig())
