@@ -11,11 +11,12 @@ import (
 	"github.com/filecoin-project/bacalhau/pkg/devstack"
 	"github.com/filecoin-project/bacalhau/pkg/executor"
 	_ "github.com/filecoin-project/bacalhau/pkg/logger"
+	"github.com/filecoin-project/bacalhau/pkg/publicapi"
 	"github.com/rs/zerolog/log"
 	"github.com/stretchr/testify/require"
 )
 
-func TestSimilarMoviesStdout(t *testing.T) {
+func TestSimilarMoviesStdout(nodeCount int, t *testing.T) {
 	ctx, span := newSpan("TestSimilarMoviesStdout")
 	defer span.End()
 	stack, cm := SetupTest(t, 1, 0, computenode.NewDefaultComputeNodeConfig())
@@ -66,9 +67,9 @@ func TestSimilarMoviesStdout(t *testing.T) {
 			if i >= nodeCount {
 				continue
 			}
+			err = node.IpfsClient.Get(ctx, cid, outputDir)
+			require.NoError(t, err)
 		}
-		err = node.IpfsClient.Get(ctx, cid, outputDir)
-		require.NoError(t, err)
 
 		bytesDowloaded, err := ioutil.ReadFile(outputDir + "/" + cid + "/stdout")
 		require.NoError(err)
@@ -84,7 +85,7 @@ func TestSimilarMoviesStdout(t *testing.T) {
 	}
 }
 
-func TestSyntheticDataGenerationOutputVolume(t *testing.T) {
+func TestSyntheticDataGenerationOutputVolume(nodeCount int, t *testing.T) {
 	ctx, span := newSpan("TestSyntheticDataGenerationOutputVolume")
 	defer span.End()
 	stack, cm := SetupTest(t, 1, 0, computenode.NewDefaultComputeNodeConfig())
@@ -136,9 +137,9 @@ func TestSyntheticDataGenerationOutputVolume(t *testing.T) {
 			if i >= nodeCount {
 				continue
 			}
+			err = node.IpfsClient.Get(ctx, cid, outputDir)
+			require.NoError(t, err)
 		}
-		err = node.IpfsClient.Get(ctx, cid, outputDir)
-		require.NoError(t, err)
 
 		bytesDowloaded, err := ioutil.ReadFile(outputDir + "/" + cid + "/stdout")
 		require.NoError(err)
@@ -155,7 +156,7 @@ func TestSyntheticDataGenerationOutputVolume(t *testing.T) {
 
 }
 
-func TestCoresetInputVolumeStdout(t *testing.T) {
+func TestCoresetInputVolumeStdout(nodeCount int, t *testing.T) {
 	ctx, span := newSpan("TestCoresetInputVolumeStdout")
 	defer span.End()
 	stack, cm := SetupTest(t, 1, 0, computenode.NewDefaultComputeNodeConfig())
@@ -224,7 +225,7 @@ func TestCoresetInputVolumeStdout(t *testing.T) {
 
 }
 
-func TestGROMACSInputVolumeOutputVolume(t *testing.T) {
+func TestGROMACSInputVolumeOutputVolume(nodeCount int, t *testing.T) {
 	ctx, span := newSpan("TestGMORACSInputVolumeOutputVolume")
 	defer span.End()
 	stack, cm := SetupTest(t, 1, 0, computenode.NewDefaultComputeNodeConfig())
@@ -284,9 +285,9 @@ func TestGROMACSInputVolumeOutputVolume(t *testing.T) {
 			if i >= nodeCount {
 				continue
 			}
+			err = node.IpfsClient.Get(ctx, cid, outputDir)
+			require.NoError(t, err)
 		}
-		err = node.IpfsClient.Get(ctx, cid, outputDir)
-		require.NoError(t, err)
 
 		bytesDowloaded, err := ioutil.ReadFile(outputDir + "/" + cid + "/output" + "/1AKI_processed.gro")
 		require.NoError(err)
