@@ -68,12 +68,12 @@ func TestSimilarMoviesStdout(t *testing.T) {
 		require.NoError(t, err)
 
 		bytesDowloaded, err := ioutil.ReadFile(outputDir + "/" + cid + "/stdout")
-		require.NoError(err)
+		require.NoError(t, err)
 
 		// read local files
 		path_local := "../../testdata/python-similar-movies"
 		bytesLocal, err := ioutil.ReadFile(path_local + "/" + cid + "/stdout")
-		require.NoError(err)
+		require.NoError(t, err)
 
 		// compare the local file stored here
 		log.Info().Msg(string(bytesDowloaded))
@@ -135,12 +135,12 @@ func TestSyntheticDataGenerationOutputVolume(t *testing.T) {
 		require.NoError(t, err)
 
 		bytesDowloaded, err := ioutil.ReadFile(outputDir + "/" + cid + "/stdout")
-		require.NoError(err)
+		require.NoError(t, err)
 
 		// read local files
 		path_local := "../../testdata/synthetic-data-generation"
 		bytesLocal, err := ioutil.ReadFile(path_local + "/" + "QmWyQ4hDPzjX271utC8WsYY5XodRk9RKmEDHMj24KYDA9S" + "/stdout")
-		require.NoError(err)
+		require.NoError(t, err)
 
 		// compare the local file stored here
 		log.Info().Msg(string(bytesDowloaded))
@@ -283,12 +283,12 @@ func TestGROMACSInputVolumeOutputVolume(t *testing.T) {
 		require.NoError(t, err)
 
 		bytesDowloaded, err := ioutil.ReadFile(outputDir + "/" + cid + "/output" + "/1AKI_processed.gro")
-		require.NoError(err)
+		require.NoError(t, err)
 
 		// read local files
 		path_local := "../../testdata/synthetic-data-generation"
 		bytesLocal, err := ioutil.ReadFile(path_local + "/" + "QmVZKeKAsKswY4uXcBkUz9eo19Qy9FNF7hUXnoxEZTGTM8" + "/output" + "/1AKI_processed.gro")
-		require.NoError(err)
+		require.NoError(t, err)
 
 		// compare the local file stored here
 		log.Info().Msg(string(bytesDowloaded))
