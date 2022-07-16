@@ -17,10 +17,11 @@ import (
 )
 
 func TestSimilarMoviesStdout(t *testing.T) {
+	nodeCount := 1
 
 	ctx, span := newSpan("TestSimilarMoviesStdout")
 	defer span.End()
-	stack, cm := SetupTest(t, 1, 0, computenode.NewDefaultComputeNodeConfig())
+	stack, cm := SetupTest(t, nodeCount, 0, computenode.NewDefaultComputeNodeConfig())
 	defer TeardownTest(stack, cm)
 
 	nodeIds, err := stack.GetNodeIds()
