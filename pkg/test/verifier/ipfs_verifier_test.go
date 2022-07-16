@@ -4,6 +4,7 @@ import (
 	"context"
 	"io/ioutil"
 	"os"
+	"path/filepath"
 	"testing"
 
 	_ "github.com/filecoin-project/bacalhau/pkg/logger"
@@ -38,10 +39,11 @@ func TestIPFSVerifier(t *testing.T) {
 		"fake-job-id", inputDir)
 	require.NoError(t, err)
 
-	err = verifier.IPFSClient.Get(ctx, resultHash, outputDir)
+	outputPath := filepath.Join(outputDir, resultHash)
+	err = verifier.IPFSClient.Get(ctx, resultHash, outputPath)
 	require.NoError(t, err)
 
-	outputContent, err := os.ReadFile(outputDir + "/" + resultHash + "/file.txt")
+	outputContent, err := os.ReadFile(outputPath + "/file.txt")
 	require.NoError(t, err)
 
 	require.Equal(t, fixtureContent, string(outputContent))

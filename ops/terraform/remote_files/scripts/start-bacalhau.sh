@@ -2,8 +2,11 @@
 set -euo pipefail
 IFS=$'\n\t'
 
-# import the terraforn vars
+# import the terraform vars
 source /terraform_node/variables
+
+# import the secrets
+source /data/secrets.sh
 
 # pick between the configured nodeid and the unsafe one
 export USE_NODE0_ID="$BACALHAU_CONNECT_NODE0"

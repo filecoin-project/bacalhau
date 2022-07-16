@@ -11,6 +11,7 @@ import (
 
 	"github.com/rs/zerolog/log"
 	"go.opentelemetry.io/otel"
+	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/exporters/otlp/otlptrace"
 	"go.opentelemetry.io/otel/exporters/otlp/otlptrace/otlptracegrpc"
 	"go.opentelemetry.io/otel/exporters/stdout/stdouttrace"
@@ -61,6 +62,12 @@ func Span(ctx context.Context, svcName, spanName string,
 	opts ...trace.SpanStartOption) (context.Context, trace.Span) {
 	svc := fmt.Sprintf("bacalhau.org/%s", svcName)
 	spn := fmt.Sprintf("%s/%s", svcName, spanName)
+
+	// Always include environment info in spans:
+	opts = append(opts, trace.WithAttributes(
+		attribute.String("environment", GetEnvironment().String()),
+	))
+
 	return tracer(svc).Start(ctx, spn, opts...)
 }
 

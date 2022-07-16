@@ -114,17 +114,28 @@ func (dockerIPFS *StorageProvider) CleanupStorage(ctx context.Context, storageSp
 }
 
 func (dockerIPFS *StorageProvider) copyFile(ctx context.Context, storageSpec storage.StorageSpec) (*storage.StorageVolume, error) {
-	_, err := system.Timeout(config.GetDownloadCidRequestTimeout(), func() (interface{}, error) {
-		innerErr := dockerIPFS.IPFSClient.Get(ctx, storageSpec.Cid, dockerIPFS.LocalDir)
-		return nil, innerErr
-	})
+	outputPath := fmt.Sprintf("%s/%s", dockerIPFS.LocalDir, storageSpec.Cid)
+
+	// If the output path already exists, we already have the data, as
+	// ipfsClient.Get(...) renames the result path atomically after it has
+	// finished downloading the CID.
+	ok, err := system.PathExists(outputPath)
 	if err != nil {
 		return nil, err
+	}
+	if !ok {
+		_, err := system.Timeout(config.GetDownloadCidRequestTimeout(), func() (interface{}, error) {
+			innerErr := dockerIPFS.IPFSClient.Get(ctx, storageSpec.Cid, outputPath)
+			return nil, innerErr
+		})
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	volume := &storage.StorageVolume{
 		Type:   "bind",
-		Source: fmt.Sprintf("%s/%s", dockerIPFS.LocalDir, storageSpec.Cid),
+		Source: outputPath,
 		Target: storageSpec.Path,
 	}
 

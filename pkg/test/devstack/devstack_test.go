@@ -3,6 +3,7 @@ package devstack
 import (
 	"context"
 	"io/ioutil"
+	"path/filepath"
 	"testing"
 
 	"github.com/filecoin-project/bacalhau/pkg/computenode"
@@ -85,10 +86,11 @@ func devStackDockerStorageTest(
 		outputDir, err := ioutil.TempDir("", "bacalhau-ipfs-devstack-test")
 		require.NoError(t, err)
 
-		err = node.IpfsClient.Get(ctx, state.ResultsID, outputDir)
+		outputPath := filepath.Join(outputDir, state.ResultsID)
+		err = node.IpfsClient.Get(ctx, state.ResultsID, outputPath)
 		require.NoError(t, err)
 
-		testCase.ResultsChecker(outputDir + "/" + state.ResultsID)
+		testCase.ResultsChecker(outputPath)
 	}
 }
 

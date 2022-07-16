@@ -45,11 +45,13 @@ export TERRAFORM_NODE_INDEX="${count.index}"
 export TERRAFORM_NODE_IP="${var.protect_resources ? google_compute_address.ipv4_address[count.index].address : google_compute_address.ipv4_address_unprotected[count.index].address}"
 export TERRAFORM_NODE0_IP="${var.protect_resources ? google_compute_address.ipv4_address[0].address : google_compute_address.ipv4_address_unprotected[0].address}"
 export IPFS_VERSION="${var.ipfs_version}"
+export BACALHAU_ENVIRONMENT="${terraform.workspace}"
 export BACALHAU_VERSION="${var.bacalhau_version}"
 export BACALHAU_PORT="${var.bacalhau_port}"
 export BACALHAU_UNSAFE_CLUSTER="${var.bacalhau_unsafe_cluster ? "yes" : ""}"
 export BACALHAU_CONNECT_NODE0="${var.bacalhau_connect_node0}"
 export BACALHAU_NODE0_UNSAFE_ID="QmUqesBmpC7pSzqH86ZmZghtWkLwL6RRop3M1SrNbQN5QD"
+export SECRETS_HONEYCOMB_KEY="${var.honeycomb_api_key}"
 EOI
 
 ##############################

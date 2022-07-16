@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"os"
+	"path/filepath"
 	"strings"
 	"testing"
 
@@ -81,14 +82,15 @@ func TestErrorContainer(t *testing.T) {
 	node, err := stack.GetNode(ctx, nodeIDs[0])
 	require.NoError(t, err)
 
-	err = node.IpfsClient.Get(ctx, state.ResultsID, outputDir)
+	outputPath := filepath.Join(outputDir, state.ResultsID)
+	err = node.IpfsClient.Get(ctx, state.ResultsID, outputPath)
 	require.NoError(t, err)
 
-	stdoutBytes, err := os.ReadFile(fmt.Sprintf("%s/%s/stdout", outputDir, state.ResultsID))
+	stdoutBytes, err := os.ReadFile(fmt.Sprintf("%s/stdout", outputPath))
 	require.NoError(t, err)
-	stderrBytes, err := os.ReadFile(fmt.Sprintf("%s/%s/stderr", outputDir, state.ResultsID))
+	stderrBytes, err := os.ReadFile(fmt.Sprintf("%s/stderr", outputPath))
 	require.NoError(t, err)
-	exitCodeBytes, err := os.ReadFile(fmt.Sprintf("%s/%s/exitCode", outputDir, state.ResultsID))
+	exitCodeBytes, err := os.ReadFile(fmt.Sprintf("%s/exitCode", outputPath))
 	require.NoError(t, err)
 
 	require.Equal(t, stdout, strings.TrimSpace(string(stdoutBytes)))

@@ -50,10 +50,10 @@ var getCmd = &cobra.Command{
 			return fmt.Errorf("job not found")
 		}
 
-		var resultCIDs []string
+		resultCIDs := map[string]bool{}
 		for _, jobState := range job.State {
 			if jobState.ResultsID != "" {
-				resultCIDs = append(resultCIDs, jobState.ResultsID)
+				resultCIDs[jobState.ResultsID] = true
 			}
 		}
 		log.Debug().Msgf("Job has result CIDs: %v", resultCIDs)
@@ -82,8 +82,18 @@ var getCmd = &cobra.Command{
 			return err
 		}
 
-		for _, cid := range resultCIDs {
+		// NOTE: this will run in non-deterministic order
+		for cid := range resultCIDs {
 			outputDir := filepath.Join(getCmdFlags.outputDir, cid)
+			ok, err := system.PathExists(outputDir)
+			if err != nil {
+				return err
+			}
+			if ok {
+				log.Warn().Msgf("Output directory '%s' already exists, skipping CID '%s'.", outputDir, cid)
+				continue
+			}
+
 			log.Info().Msgf("Downloading result CID '%s' to '%s'...",
 				cid, outputDir)
 

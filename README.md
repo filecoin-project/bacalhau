@@ -1,4 +1,5 @@
-[![CircleCI](https://dl.circleci.com/status-badge/img/null/filecoin-project/bacalhau/tree/main.svg?style=svg)](https://dl.circleci.com/status-badge/redirect/null/filecoin-project/bacalhau/tree/main)
+<!-- commenting out until we can fix the image logo [![CircleCI](https://dl.circleci.com/status-badge/img/null/filecoin-project/bacalhau/tree/main.svg?style=svg)](https://dl.circleci.com/status-badge/redirect/null/filecoin-project/bacalhau/tree/main)
+-->
 
 <p align="center">
   <img src="docs/images/bacalhau-fish.jpg" alt="Bacalhau Logo" width="400" />
@@ -13,17 +14,21 @@
 
 # The Filecoin Distributed Computation Framework  
 
-
-## Project Background
- * Goals: Open, Collaborative Compute Ecosystem
- * [DESIGN.MD](DESIGN.md)
- * [Bacalhau Overview at PL Eng Res February 2022](https://youtu.be/wmu-lOhSSZo?t=3367)
+* [Website](bacalhau.org)
+* [Documentation](docs.bacalhau.org)
+* [Twitter](https://twitter.com/BacalhauProject)
  
 ## Latest Updates
-  * Most recent [Bacalhau Project Report](https://github.com/filecoin-project/bacalhau/wiki)
+* Most recent [Bacalhau Project Reports](https://github.com/filecoin-project/bacalhau/wiki)
+* [Bacalhau Overview at DeSci Berlin June 2022](https://www.youtube.com/watch?v=HA8ijt4dzAY)
 
-## Running Bacalhau locally with devstack
-The easiest way to spin up bacalhau and run a local demo is to use the devstack command. Please see [docs/running_locally.md](docs/running_locally.md) for instructions.
+
+## New users: Getting Started: Hello World
+Please see the instructions here to get started running a hello example and then onboarding your workload to Bacalhau: [Getting Started with the Bacalhau Public Network](https://docs.bacalhau.org/getting-started/installation)
+
+
+## Bacalhau Developers: Running Bacalhau locally with devstack
+Developers can spin up bacalhau and run a local demo using the devstack command. Please see [docs/running_locally.md](docs/running_locally.md) for instructions.
 
 
 ## Notes for Contributors

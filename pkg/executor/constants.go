@@ -2,7 +2,10 @@ package executor
 
 import (
 	"fmt"
+	"strconv"
 	"strings"
+
+	"gopkg.in/yaml.v3"
 )
 
 //go:generate stringer -type=EngineType --trimprefix=Engine
@@ -106,8 +109,32 @@ const (
 // IsTerminal returns true if the given job type signals the end of the
 // lifecycle of that job on a particular node. After this, the job can be
 // safely ignored by the node.
-func (event JobStateType) IsTerminal() bool {
-	return event == JobStateComplete || event == JobStateError || event == JobStateBidRejected
+func (typ JobStateType) IsTerminal() bool {
+	return typ == JobStateComplete || typ == JobStateError || typ == JobStateBidRejected
+}
+
+// MarshalYAML encodes a JobStateType as a string for readability.
+func (typ JobStateType) MarshalYAML() (interface{}, error) {
+	return typ.String(), nil
+}
+
+// UnmarshalYAML decodes a JobStateType from a string or an int.
+func (typ *JobStateType) UnmarshalYAML(value *yaml.Node) error {
+	// First try and parse value.Value as an int:
+	i, err := strconv.ParseInt(value.Value, 10, 32) // nolint:gomnd
+	if err == nil {
+		*typ = JobStateType(i)
+		return nil
+	}
+
+	// If that fails, try to parse value.Value as a string:
+	t, err := ParseJobStateType(value.Value)
+	if err != nil {
+		return err
+	}
+
+	*typ = t
+	return nil
 }
 
 func ParseJobStateType(str string) (JobStateType, error) {
@@ -118,7 +145,7 @@ func ParseJobStateType(str string) (JobStateType, error) {
 	}
 
 	return jobStateUnknown, fmt.Errorf(
-		"executor: unknown job event type '%s'", str)
+		"executor: unknown job typ type '%s'", str)
 }
 
 func JobStateTypes() []JobStateType {

@@ -66,3 +66,11 @@ variable "ssh_access_cidrs" {
   type    = set(string)
   default = []
 }
+
+// secrets - if these are set then they will get injected into a secrets file
+// on the node's persistent data disk. This is useful for initialising stuff
+// like API keys that shouldn't go in the public repo.
+variable "honeycomb_api_key" {
+  type = string
+  default = ""
+}

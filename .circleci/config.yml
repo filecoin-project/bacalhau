@@ -6,7 +6,7 @@ executors:
   linux:
     machine:
       image: ubuntu-2204:2022.04.2
-    resource_class: large
+    resource_class: xlarge
 
 # Define a job to be invoked later in a workflow.
 # See: https://circleci.com/docs/2.0/configuration-reference/#jobs
@@ -32,24 +32,6 @@ jobs:
 
     steps:
       - checkout
-      - run:
-          name: Echos
-          command: |
-            echo "GOOS => $GOOS"
-            echo "GOARCH => $GOARCH"
-            echo "BRANCH => $CIRCLE_BRANCH"
-      - run:
-          name: Install Go
-          command: |
-            curl -s -L -O "https://dl.google.com/go$GOVER.$GOOS-$GOARCH.tar.gz"
-            rm -rf /usr/local && tar -C /usr/local -xzf "go$GOVER.$GOOS-$GOARCH.tar.gz"
-            export PATH=$PATH:/usr/local/go/bin
-      - restore_cache:
-          keys:
-            - go-mod-v4-{{ checksum "go.sum" }}
-      - run:
-          name: Install Dependencies
-          command: go get ./...
 
       - run:
           name: Install IPFS
@@ -74,10 +56,6 @@ jobs:
                   curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sudo sh -s -- -b /usr/local/go/bin $GOLANGCILINT_VER
                   golangci-lint --version
 
-      - save_cache:
-          key: go-mod-v4-{{ checksum "go.sum" }}
-          paths:
-            - "/go/pkg/mod"
       - when:
           condition:
             and:
@@ -96,7 +74,6 @@ jobs:
             and:
               - equal: ["linux", << parameters.target_os >>]
               - equal: ["amd64", << parameters.target_arch >>]
-              - << pipeline.git.branch >>
           steps:
             - run:
                 name: Test
@@ -116,13 +93,16 @@ jobs:
             - run:
                 name: Upload results
                 command: |
-                  sudo add-apt-repository ppa:deadsnakes/ppa -y
                   sudo apt install python3.10 -y
                   python3 -m pip install --upgrade pip
                   pip3 install gsutil
                   export SHA="<< pipeline.git.revision >>"
                   export DATETIME="$(date -u +"%FT%H%MZ")"
-                  export TEST_RESULTS_FILENAME="<<pipeline.git.branch>>-$DATETIME-$SHA.xml"
+                  if [ "<<pipeline.git.tag>>" != "" ]; then
+                    export TEST_RESULTS_FILENAME="<<pipeline.git.tag>>-$DATETIME-$SHA.xml"
+                  else
+                    export TEST_RESULTS_FILENAME="<<pipeline.git.branch>>-$DATETIME-$SHA.xml"
+                  fi
                   echo "$GOOGLE_CLOUD_STORAGE_BACALHAU_CICD_RW" | base64 --decode > ~/.boto
                   mv unit-tests.xml "$TEST_RESULTS_FILENAME"
                   gsutil cp "$TEST_RESULTS_FILENAME" "$GCS_TEST_RESULTS_BUCKET"
@@ -170,44 +150,38 @@ jobs:
                                 terraform workspace select << parameters.rollout_stage >> && \
                                 terraform apply -auto-approve --var-file=<< parameters.rollout_stage >>.tfvars
 
-  build-release:
-    environment:
-      GOOS: << parameters.target_os >>
-      GOARCH: << parameters.target_arch >>
-    executor: linux
-    parameters:
-      target_arch:
-        type: string
-      target_os:
-        type: string
-    steps:
-      - checkout
-      - run:
-          name: Build tarball
-          command: |
-            make build
-            echo "$PRIVATE_PEM_B64" | base64 --decode > /tmp/private.pem
-            echo "$PUBLIC_PEM_B64" | base64 --decode > /tmp/public.pem
-            export PRIVATE_KEY_PASSPHRASE="$(echo $PRIVATE_KEY_PASSPHRASE_B64 | base64 --decode)"
-            make build-bacalhau-tgz
-            source /tmp/packagevars # Created during `make build-bacalhau-tgz`
-            rm dist/.keep                         # Need to remove this file so it's not persisted
-            cp $BINARY_TARBALL dist
-            cp $BINARY_TARBALL_SIGNATURE dist
-      - persist_to_workspace:
-          # Must be an absolute path, or relative path from working_directory. This is a directory on the container which is
-          # taken to be the root directory of the workspace.
-          root: .
-          # Must be relative path from root
-          paths:
-            - dist/*
   release:
     executor: linux
     steps:
       - checkout
-      - attach_workspace:
-          # Must be absolute path or relative path from working_directory
-          at: .
+      - run:
+          name: Build tarballs
+          command: |
+            GOOS=linux GOARCH=amd64 make build
+            GOOS=linux GOARCH=arm64 make build
+            GOOS=darwin GOARCH=amd64 make build
+            GOOS=darwin GOARCH=arm64 make build
+            echo "$PRIVATE_PEM_B64" | base64 --decode > /tmp/private.pem
+            echo "$PUBLIC_PEM_B64" | base64 --decode > /tmp/public.pem
+            export PRIVATE_KEY_PASSPHRASE="$(echo $PRIVATE_KEY_PASSPHRASE_B64 | base64 --decode)"
+            rm dist/.keep           # Need to remove this file so it's not persisted to github
+            GOOS=linux GOARCH=amd64 make build-bacalhau-tgz
+            source /tmp/packagevars # Created during `make build-bacalhau-tgz`
+            cp $ARTIFACT_DIR/*.tar.gz dist/
+            cp $ARTIFACT_DIR/*.sha256 dist/
+            GOOS=linux GOARCH=arm64 make build-bacalhau-tgz
+            source /tmp/packagevars
+            cp $ARTIFACT_DIR/*.tar.gz dist/
+            cp $ARTIFACT_DIR/*.sha256 dist/
+            GOOS=darwin GOARCH=amd64 make build-bacalhau-tgz
+            source /tmp/packagevars
+            cp $ARTIFACT_DIR/*.tar.gz dist/
+            cp $ARTIFACT_DIR/*.sha256 dist/
+            GOOS=darwin GOARCH=arm64 make build-bacalhau-tgz
+            source /tmp/packagevars
+            cp $ARTIFACT_DIR/*.tar.gz dist/
+            cp $ARTIFACT_DIR/*.sha256 dist/
+            find dist/
       - run:
           name: Install gh
           command: |
@@ -218,39 +192,17 @@ jobs:
             sudo apt install gh -y
             echo "$BACALHAU_RELEASE_TOKEN" | gh auth login --with-token
       - run:
-          name: Generate Changelog
-          command: echo "# Release Notes" > CHANGELOG.txt
-      - run:
           name: Uploading to Release - << pipeline.git.tag >>
           command: |
-            # if [ "<< pipeline.git.tag >>" = "" ]; then
-            #   TAG="testing-release-ci-tag-<< pipeline.git.revision >>"
-            # else
-            #   TAG="<< pipeline.git.tag >>"
-            # fi
-            # echo "TAG = ${TAG}"
-
-            # # Testing to see if release exists - should be for testing only
-            # if [ "$(gh release view $TAG 2>&1)" = "release not found" ]; then
-            #   echo "Release not found - creating (for testing only - disable in prod)"
-            #   gh release create -t $TAG -p $TAG --notes "Testing CI Release" --generate-notes
-            # else
-            #   echo "Found release - $TAG"
-            # fi
-
-            # Adding the below because for some reason, production still goes through (occassionally) but we should NEVER make a release if the tag is empty
-            if [[ "<< pipeline.git.tag >>" =~ '^v[0-9]+.[0-9]+.[0-9]+$' ]]; then
-              TAG="<< pipeline.git.tag >>"
-              echo "TAG = ${TAG}"
-
-              gh release upload $TAG dist/*
-              cat CHANGELOG.txt | gh release edit $TAG -F -
-            fi
+            TAG="<< pipeline.git.tag >>"
+            echo "TAG = ${TAG}"
+            find dist/
+            gh release upload $TAG dist/*
 
 # Invoke jobs via workflows
 # See: https://circleci.com/docs/2.0/configuration-reference/#workflows
 workflows:
-  development: # This workflow will run on all branches except 'main' and will not run on tags
+  dev_branches: # This workflow will run on all branches except 'main' and will not run on tags
     jobs:
       - build:
           name: build-<< matrix.target_os >>-<< matrix.target_arch >>
@@ -262,7 +214,7 @@ workflows:
               - target_os: "linux"
                 target_arch: "arm64"
           filters:
-            &filters-development # this yaml anchor is setting these values to "filters-development"
+            &filters_dev_branches # this yaml anchor is setting these values to "filters_dev_branches"
             branches:
               ignore: main
             tags:
@@ -274,9 +226,9 @@ workflows:
           rollout_stage: development
           GOOGLE_APPLICATION_CREDENTIALS_VARIABLE: "GOOGLE_APPLICATION_DEVELOPMENT_CREDENTIALS_B64"
           filters:
-            <<: *filters-development # this is calling the previously set yaml anchor
+            <<: *filters_dev_branches # this is calling the previously set yaml anchor
 
-  staging: # This workflow will only run on 'main' and will not run on tags
+  main_only: # This workflow will only run on 'main' and will not run on tags
     jobs:
       - build:
           name: build-<< matrix.target_os >>-<< matrix.target_arch >>
@@ -284,11 +236,8 @@ workflows:
             parameters:
               target_os: ["linux", "darwin"]
               target_arch: ["amd64", "arm64"]
-            exclude:
-              - target_os: "linux"
-                target_arch: "arm64"
           filters:
-            &filters-staging # this yaml anchor is setting these values to "filters-staging"
+            &filters_main_only # this yaml anchor is setting these values to "filters_main_only"
             branches:
               only: main
             tags:
@@ -300,61 +249,16 @@ workflows:
           rollout_stage: staging
           GOOGLE_APPLICATION_CREDENTIALS_VARIABLE: "GOOGLE_APPLICATION_STAGING_CREDENTIALS_B64"
           filters:
-            <<: *filters-staging # this is calling the previously set yaml anchor
+            <<: *filters_main_only # this is calling the previously set yaml anchor
 
-  production: # This workflow will only run on tags (specifically starting with 'v.') and will not run on branches
+  tags_only: # This workflow will only run on tags (specifically starting with 'v.') and will not run on branches
     jobs:
-      - build:
-          name: build-linux-amd64
-          target_os: linux
-          target_arch: amd64
-          filters: &filters-production
-            branches:
-              only: main
-            tags:
-              # only: /^([0-9]+)\.([0-9]+)\.([0-9]+)(?:-([0-9A-Za-z-]+(?:\.[0-9A-Za-z-]+)*))?(?:\+[0-9A-Za-z-]+)?$/
-              only: /^v([0-9]+).([0-9]+).([0-9]+)$/
-      - build:
-          name: build-darwin-amd64
-          target_os: darwin
-          target_arch: amd64
-          filters:
-            <<: *filters-production # this is calling the previously set yaml anchor
-      - build:
-          name: build-darwin-arm64
-          target_os: darwin
-          target_arch: arm64
-          filters:
-            <<: *filters-production # this is calling the previously set yaml anchor
-      - build-release:
-          name: build-release-linux-amd64
-          target_os: linux
-          target_arch: amd64
-          requires:
-            - build-linux-amd64
-          filters:
-            <<: *filters-production
-      - build-release:
-          name: build-release-darwin-amd64
-          target_os: darwin
-          target_arch: amd64
-          requires:
-            - build-darwin-amd64
-          filters:
-            <<: *filters-production
-      - build-release:
-          name: build-release-darwin-arm64
-          target_os: darwin
-          target_arch: arm64
-          requires:
-            - build-darwin-arm64
-          filters:
-            <<: *filters-production
       - release:
-          name: create-release-<< pipeline.git.tag >>
-          requires:
-            - build-release-linux-amd64
-            - build-release-darwin-amd64
-            - build-release-darwin-arm64
-          filters:
-            <<: *filters-production
+          name: release-all-binaries
+          filters: &filters_tags_only
+            branches:
+              ignore: /.*/ # don't run on any branches - only tags
+            tags:
+              # only run on tags that look like release tags e.g. v0.1.2 or
+              # v0.1.3alpha19 (actually v0.1.3anything...)
+              only: /^v([0-9]+).([0-9]+).([0-9]+).*$/

@@ -49,15 +49,26 @@ func (e *Executor) RunJob(ctx context.Context, job *executor.Job) (
 	string, error) {
 	log.Debug().Msgf("in python_wasm executor!")
 	// translate language jobspec into a docker run command
-	job.Spec.Docker.Image = "quay.io/bacalhau/pyodide:127391ad9c1a0d69bf16bb5c48bb9ba05328fed1"
+	job.Spec.Docker.Image = "quay.io/bacalhau/pyodide:e4b0eb7c1d81f320f5b43fc838b0f2a5b9003c9a"
 	if job.Spec.Language.Command != "" {
 		// pass command through to node wasm wrapper
 		job.Spec.Docker.Entrypoint = []string{"node", "n.js", "-c", job.Spec.Language.Command}
 	} else if job.Spec.Language.ProgramPath != "" {
 		// pass command through to node wasm wrapper
-		job.Spec.Docker.Entrypoint = []string{"node", "n.js", fmt.Sprintf("/job/%s", job.Spec.Language.ProgramPath)}
+		job.Spec.Docker.Entrypoint = []string{"node", "n.js", fmt.Sprintf("/pyodide_inputs/job/%s", job.Spec.Language.ProgramPath)}
 	}
 	job.Spec.Engine = executor.EngineDocker
+
+	// prepend a path on each of the user supplied volumes to prevent an accidental
+	// collision with the internal pyodide filesystem
+	for idx, v := range job.Spec.Inputs {
+		job.Spec.Inputs[idx].Path = fmt.Sprintf("/pyodide_inputs%s", v.Path)
+	}
+
+	for idx, v := range job.Spec.Outputs {
+		job.Spec.Outputs[idx].Path = fmt.Sprintf("/pyodide_outputs%s", v.Path)
+	}
+
 	// TODO: pass in command, and have n.js interpret it and pass it on to pyodide
 	return e.executors[executor.EngineDocker].RunJob(ctx, job)
 }

@@ -121,8 +121,8 @@ var runPythonCmd = &cobra.Command{
 
 		// TODO: implement ConstructLanguageJob and switch to it
 		spec, deal, err := job.ConstructLanguageJob(
-			[]string{}, // no input volumes (yet)
-			[]string{}, // no output volumes (yet)
+			jobInputVolumes,
+			jobOutputVolumes,
 			[]string{}, // no env vars (yet)
 			jobConcurrency,
 			"python",

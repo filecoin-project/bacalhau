@@ -65,6 +65,25 @@ function init-ipfs() {
   fi
 }
 
+# install any secrets provided as terraform vars
+function install-secrets() {
+  # set defaults
+  export HONEYCOMB_KEY=""
+  if [ -e /data/secrets.sh ]; then
+    source /data/secrets.sh
+  fi
+
+  # load new values if they were provided
+  if [ ! -z "${SECRETS_HONEYCOMB_KEY}" ]; then
+    export HONEYCOMB_KEY="${SECRETS_HONEYCOMB_KEY}"
+  fi
+
+  # write the secrets to persistent disk
+  sudo tee /data/secrets.sh > /dev/null <<EOG
+export HONEYCOMB_KEY="${HONEYCOMB_KEY}"
+EOG
+}
+
 # if we are node zero, are in unsafe mode and don't have a private key
 # then let's copy the unsafe private key so we have a deterministic id
 # that other nodes will connect to
@@ -95,6 +114,7 @@ function install() {
   mount-disk
   init-ipfs
   init-bacalhau
+  install-secrets
   start-services
 }
 

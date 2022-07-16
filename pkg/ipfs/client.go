@@ -4,11 +4,13 @@ import (
 	"context"
 	"fmt"
 	"os"
+	"path/filepath"
 	"time"
 
 	"github.com/filecoin-project/bacalhau/pkg/system"
 	files "github.com/ipfs/go-ipfs-files"
 	httpapi "github.com/ipfs/go-ipfs-http-client"
+	ipld "github.com/ipfs/go-ipld-format"
 	dag "github.com/ipfs/go-merkledag"
 	ft "github.com/ipfs/go-unixfs"
 	icore "github.com/ipfs/interface-go-ipfs-core"
@@ -116,10 +118,13 @@ func (cl *Client) Get(ctx context.Context, cid, outputPath string) error {
 	ctx, span := newSpan(ctx, "Get")
 	defer span.End()
 
-	// If outputPath already exists as a directory, we download results to
-	// a new outputPath/cid directory instead to mimic `ipfs get`:
-	if s, err := os.Stat(outputPath); err == nil && s.IsDir() {
-		outputPath = fmt.Sprintf("%s/%s", outputPath, cid)
+	// Output path is required to not exist yet:
+	ok, err := system.PathExists(outputPath)
+	if err != nil {
+		return err
+	}
+	if ok {
+		return fmt.Errorf("output path '%s' already exists", outputPath)
 	}
 
 	node, err := cl.api.Unixfs().Get(ctx, icorepath.New(cid))
@@ -127,7 +132,18 @@ func (cl *Client) Get(ctx context.Context, cid, outputPath string) error {
 		return fmt.Errorf("failed to get ipfs cid '%s': %w", cid, err)
 	}
 
-	return files.WriteTo(node, outputPath)
+	baseDir := filepath.Dir(outputPath)
+	tmpPath := filepath.Join(baseDir, system.GetRandomString(10))
+	if err := files.WriteTo(node, tmpPath); err != nil {
+		return fmt.Errorf("failed to write to '%s': %w", tmpPath, err)
+	}
+	defer os.RemoveAll(tmpPath)
+
+	if err := os.Rename(tmpPath, outputPath); err != nil {
+		return fmt.Errorf("failed to rename '%s' to '%s': %w", tmpPath, outputPath, err)
+	}
+
+	return nil
 }
 
 // Put uploads a file or directory to the ipfs network. Timeouts and
@@ -195,27 +211,9 @@ func (cl *Client) Stat(ctx context.Context, cid string) (*StatResult, error) {
 		return nil, fmt.Errorf("failed to resolve node '%s': %w", cid, err)
 	}
 
-	// Taken from go-ipfs/core/commands/files.go:
-	var nodeType IPLDType
-	switch n := node.(type) {
-	case *dag.ProtoNode:
-		d, err := ft.FSNodeFromBytes(n.Data())
-		if err != nil {
-			return nil, err
-		}
-
-		switch d.Type() {
-		case ft.TDirectory, ft.THAMTShard:
-			nodeType = IPLDDirectory
-		case ft.TFile, ft.TMetadata, ft.TRaw:
-			nodeType = IPLDFile
-		default:
-			return nil, fmt.Errorf("unrecognized node type: %s", d.Type())
-		}
-	case *dag.RawNode:
-		nodeType = IPLDFile
-	default:
-		return nil, fmt.Errorf("unrecognized node type: %T", node)
+	nodeType, err := getNodeType(node)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get node type: %w", err)
 	}
 
 	return &StatResult{
@@ -275,6 +273,33 @@ func (cl *Client) HasCID(ctx context.Context, cid string) (bool, error) {
 	}
 
 	return false, nil
+}
+
+func getNodeType(node ipld.Node) (IPLDType, error) {
+	// Taken from go-ipfs/core/commands/files.go:
+	var nodeType IPLDType
+	switch n := node.(type) {
+	case *dag.ProtoNode:
+		d, err := ft.FSNodeFromBytes(n.Data())
+		if err != nil {
+			return IPLDUnknown, err
+		}
+
+		switch d.Type() {
+		case ft.TDirectory, ft.THAMTShard:
+			nodeType = IPLDDirectory
+		case ft.TFile, ft.TMetadata, ft.TRaw:
+			nodeType = IPLDFile
+		default:
+			return IPLDUnknown, fmt.Errorf("unrecognized node type: %s", d.Type())
+		}
+	case *dag.RawNode:
+		nodeType = IPLDFile
+	default:
+		return IPLDUnknown, fmt.Errorf("unrecognized node type: %T", node)
+	}
+
+	return nodeType, nil
 }
 
 func newSpan(ctx context.Context, api string) (context.Context, trace.Span) {

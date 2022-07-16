@@ -252,7 +252,7 @@ node %d
 export IPFS_API_PORT_%d=%d
 export IPFS_PATH_%d=%s
 export API_PORT_%d=%d
-cid=$(IPFS_PATH=%s ipfs add -q testdata/grep_file.txt)
+cid=$(ipfs --api /ip4/127.0.0.1/tcp/${IPFS_API_PORT_%d} add --quiet ./testdata/grep_file.txt)
 curl -XPOST http://127.0.0.1:%d/api/v0/id
 `,
 			nodeIndex,
@@ -262,7 +262,7 @@ curl -XPOST http://127.0.0.1:%d/api/v0/id
 			node.IpfsNode.RepoPath,
 			nodeIndex,
 			stack.Nodes[0].APIServer.Port,
-			node.IpfsNode.RepoPath,
+			nodeIndex,
 			node.IpfsNode.APIPort,
 		)
 	}

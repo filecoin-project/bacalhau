@@ -114,6 +114,10 @@ func (apiClient *APIClient) Submit(ctx context.Context, spec *executor.JobSpec,
 		Deal: deal,
 	}
 
+	if buildContext != nil {
+		data.Context = base64.StdEncoding.EncodeToString(buildContext.Bytes())
+	}
+
 	jsonData, err := json.Marshal(data)
 	if err != nil {
 		return nil, err
@@ -129,9 +133,6 @@ func (apiClient *APIClient) Submit(ctx context.Context, spec *executor.JobSpec,
 		Data:            data,
 		ClientSignature: signature,
 		ClientPublicKey: system.GetClientPublicKey(),
-	}
-	if buildContext != nil {
-		req.Data.Context = base64.StdEncoding.EncodeToString(buildContext.Bytes())
 	}
 
 	if err := apiClient.post(ctx, "submit", req, &res); err != nil {

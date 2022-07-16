@@ -113,6 +113,7 @@ build-bacalhau-tgz:
 	tar cvzf $(TMPARTIFACTDIR)/$(PACKAGE).tar.gz -C $(TMPARTIFACTDIR)/$(PACKAGE) .
 	openssl dgst -sha256 -sign $(PRIVATE_KEY_FILE)  -passin pass:"$(PRIVATE_KEY_PASSPHRASE)" -out $(TMPRELEASEWORKINGDIR)/tarsign.sha256 $(TMPARTIFACTDIR)/$(PACKAGE).tar.gz
 	openssl base64 -in $(TMPRELEASEWORKINGDIR)/tarsign.sha256 -out $(TMPARTIFACTDIR)/$(PACKAGE).tar.gz.signature.sha256
+	@echo "export ARTIFACT_DIR=$(TMPARTIFACTDIR)" >> /tmp/packagevars
 	@echo "export BINARY_TARBALL=$(TMPARTIFACTDIR)/$(PACKAGE).tar.gz" >> /tmp/packagevars
 	@echo "export BINARY_TARBALL_NAME=$(PACKAGE).tar.gz" >> /tmp/packagevars
 	@echo "export BINARY_TARBALL_SIGNATURE=$(TMPARTIFACTDIR)/$(PACKAGE).tar.gz.signature.sha256" >> /tmp/packagevars
@@ -131,11 +132,11 @@ clean:
 ################################################################################
 .PHONY: test
 test:
-	go test ./... -v
+	go test ./... -v -p 1
 
 .PHONY: test-debug
 test-debug: 
-	LOG_LEVEL=debug go test ./... -v
+	LOG_LEVEL=debug go test ./... -v -p 1
 
 .PHONY: test-one
 test-one:
@@ -211,6 +212,7 @@ test-and-report: build-bacalhau
 			--jsonfile ${TEST_OUTPUT_FILE_PREFIX}_unit.json \
 			--format standard-quiet \
 			-- \
+				-p 1 \
 				./pkg/... ./cmd/... \
 				$(COVERAGE_OPTS) --tags=unit
 

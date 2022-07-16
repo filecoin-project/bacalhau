@@ -12,6 +12,7 @@ require (
 	github.com/ipfs/go-ipfs v0.13.0
 	github.com/ipfs/go-ipfs-files v0.1.1
 	github.com/ipfs/go-ipfs-http-client v0.4.0
+	github.com/ipfs/go-ipld-format v0.4.0
 	github.com/ipfs/go-merkledag v0.6.0
 	github.com/ipfs/go-unixfs v0.3.1
 	github.com/ipfs/interface-go-ipfs-core v0.7.0
@@ -132,7 +133,6 @@ require (
 	github.com/ipfs/go-ipfs-routing v0.2.1 // indirect
 	github.com/ipfs/go-ipfs-util v0.0.2 // indirect
 	github.com/ipfs/go-ipld-cbor v0.0.5 // indirect
-	github.com/ipfs/go-ipld-format v0.4.0 // indirect
 	github.com/ipfs/go-ipld-git v0.1.1 // indirect
 	github.com/ipfs/go-ipld-legacy v0.1.1 // indirect
 	github.com/ipfs/go-ipns v0.1.2 // indirect
