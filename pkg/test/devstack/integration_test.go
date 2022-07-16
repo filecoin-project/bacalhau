@@ -31,7 +31,7 @@ func TestSimilarMoviesStdout(t *testing.T) {
 		"--api-host=localhost",
 		"docker",
 		"run",
-		"python",
+		"jsace/python-similar-movies",
 		"--",
 		"/bin/bash",
 		"-c",
