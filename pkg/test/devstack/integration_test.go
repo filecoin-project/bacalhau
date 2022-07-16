@@ -26,6 +26,8 @@ func TestSimilarMoviesStdout(t *testing.T) {
 	nodeIds, err := stack.GetNodeIds()
 	require.NoError(t, err)
 
+	// bacalhau docker run jsace/python-similar-movies -- /bin/bash -c 'python similar-movies.py --k 50 --id 10 --n 1'
+
 	_, out, err := cmd.ExecuteTestCobraCommand(t, cmd.RootCmd,
 		fmt.Sprintf("--api-port=%d", stack.Nodes[0].APIServer.Port),
 		"--api-host=localhost",
